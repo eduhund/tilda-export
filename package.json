@@ -1,0 +1,19 @@
+{
+  "name": "tilda-export",
+  "version": "1.1.1",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "Roman Nebel",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "nginx-conf": "^2.1.0",
+    "node-fetch": "^2.7.0"
+  }
+}
