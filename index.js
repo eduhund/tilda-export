@@ -49,34 +49,33 @@ function checkPage(config, pageId) {
 }
 
 async function savePage(page) {
-    const data = await fetch(tildaAPI.getPageFull + '&pageid=' + page.pageid)
-    .then((response) => response.json())
+  const data = await fetch(tildaAPI.getPageFull + '&pageid=' + page.pageid)
+  .then((response) => response.json())
 
+  console.log("data recieved")
+
+  const {html, alias} = data.result || {}
+  const pagePath = alias ? alias.split('/', 2) : null
+
+  if (pagePath) {
     const config = await NginxConf()
-
-    const {html, alias} = data.result || {}
-    const pagePath = alias ? alias.split('/', 2) : null
-
-    if (!pagePath) {
-      return
-    }
-
     const isCurrentPage = checkPage(config, page.pageid)
 
     if (!isCurrentPage) {
-    const regStr = '^/' + pagePath[0] + '$'
-    const reg = new RegExp(regStr)
-    const parentDirIndex = config.nginx.location.findIndex((loc) => reg.test(loc._value))
+      const regStr = '^/' + pagePath[0] + '$'
+      const reg = new RegExp(regStr)
+      const parentDirIndex = config.nginx.location.findIndex((loc) => reg.test(loc._value))
 
-    if (parentDirIndex === -1) {
-      config.nginx._add('location', `/${pagePath[0]}`)
-      config.nginx.location[result.nginx.location.length-1]._add('rewrite', `^/${alias}$ /page${page.pageid}.html`)
-      config.flush();
-    } else {
-      config.nginx.location[parentDirIndex]._add('rewrite', `^/${alias}$ /page${page.pageid}.html`)
+      if (parentDirIndex === -1) {
+        config.nginx._add('location', `/${pagePath[0]}`)
+        config.nginx.location[result.nginx.location.length-1]._add('rewrite', `^/${alias}$ /page${page.pageid}.html`)
+        config.flush();
+      } else {
+        config.nginx.location[parentDirIndex]._add('rewrite', `^/${alias}$ /page${page.pageid}.html`)
+      }
+
+      restartNGINX()
     }
-
-    restartNGINX()
   }
 
   if (!fs.existsSync(dirPath)) {
@@ -84,8 +83,12 @@ async function savePage(page) {
       if (err) throw err;
     });
   }
+
+  const path = `${dirPath}/page${page.pageid}.html`
   
-  fs.writeFileSync(`${dirPath}/page${page.pageid}.html`, html)
+  fs.writeFileSync(path, html)
+
+  console.log("page saved")
 }
 
 server.get('/webhook', (req, res) => {
